@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import NextCors from 'nextjs-cors'
 import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
 import blockfrost from '@/utils/blockfrost'
 // import { components } from '@blockfrost/openapi'
@@ -92,10 +91,7 @@ export interface WalletResponse {
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>) => {
-  await NextCors(req, res, {
-    origin: ['*.badfoxmc.com', 'http://localhost:3000'],
-  })
-
+  res.setHeader('Access-Control-Allow-Origin', '*')
   const { method, query } = req
 
   const identifier = query.wallet_identifier?.toString() as string

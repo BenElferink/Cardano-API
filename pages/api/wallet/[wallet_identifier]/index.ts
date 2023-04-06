@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import NextCors from 'nextjs-cors'
 import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
-// import { components } from '@blockfrost/openapi'
 import blockfrost from '@/utils/blockfrost'
+// import { components } from '@blockfrost/openapi'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
 
 const getWalletStakeKeyAndAddressesFromCborString = async (
@@ -87,18 +88,19 @@ export interface WalletResponse {
     assetId: string
     count: number
   }[]
-  // | {
-  //     assetId: string
-  //     count: number
-  //   }[]
   // | components['schemas']['asset'][]
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>) => {
+  await NextCors(req, res, {
+    origin: ['*.badfoxmc.com', 'http://localhost:3000'],
+  })
+
   const { method, query } = req
 
   const identifier = query.wallet_identifier?.toString() as string
 
+  // const populateAddresses = !!query.populate_addresses && query.populate_addresses == 'true'
   const withStakePool = !!query.with_stake_pool && query.with_stake_pool == 'true'
   const withAssets = !!query.with_assets && query.with_assets == 'true'
   // const populateAssets = !!query.populate_assets && query.populate_assets == 'true'

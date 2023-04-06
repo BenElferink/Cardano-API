@@ -1,8 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  images: {
-    domains: ['badfoxmc.com'],
+  async headers() {
+    return [
+      {
+        source: "/api/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "OPTIONS,GET,POST" },
+          // { key: "Access-Control-Allow-Headers", value: "Accept, Content-Type" },
+        ]
+      }
+    ]
   },
   webpack: function (config, options) {
     config.experiments = {

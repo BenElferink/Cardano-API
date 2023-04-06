@@ -91,7 +91,6 @@ export interface WalletResponse {
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>) => {
-  res.setHeader('Access-Control-Allow-Origin', '*')
   const { method, query } = req
 
   const identifier = query.wallet_identifier?.toString() as string

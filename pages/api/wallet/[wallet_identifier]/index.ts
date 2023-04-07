@@ -189,7 +189,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
     }
 
     if (error?.status_code === 400 || error?.message === 'The requested component has not been found.') {
-      return res.status(400).end(`Wallet not found: ${identifier}`)
+      return res.status(404).end(`Wallet not found: ${identifier}`)
     }
 
     return res.status(500).end()

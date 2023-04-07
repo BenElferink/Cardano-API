@@ -1,8 +1,9 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
 import blockfrost from '@/utils/blockfrost'
-// import { components } from '@blockfrost/openapi'
+import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
+import type { Address, Asset } from '@/@types'
 
 const INVALID_WALLET_IDENTIFIER = 'INVALID_WALLET_IDENTIFIER'
 
@@ -83,13 +84,9 @@ const getWalletStakeKeyAndAddresses = async (
 
 export interface WalletResponse {
   stakeKey: string
-  addresses: string[]
+  addresses: Address[]
   poolId?: string
-  assets?: {
-    assetId: string
-    count: number
-  }[]
-  // | components['schemas']['asset'][]
+  assets?: Asset[]
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>) => {
@@ -97,32 +94,42 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
 
   const identifier = query.wallet_identifier?.toString() as string
 
-  // const populateAddresses = !!query.populate_addresses && query.populate_addresses == 'true'
   const withStakePool = !!query.with_stake_pool && query.with_stake_pool == 'true'
   const withAssets = !!query.with_assets && query.with_assets == 'true'
-  // const populateAssets = !!query.populate_assets && query.populate_assets == 'true'
-  const filterAssetsWithPolicyIds =
-    !!query.filter_assets_with_policy_ids && !Array.isArray(query.filter_assets_with_policy_ids)
-      ? JSON.parse(query.filter_assets_with_policy_ids)
-      : false
 
   try {
     switch (method) {
       case 'GET': {
         console.log('Fetching wallet:', identifier)
 
-        const wallet = await getWalletStakeKeyAndAddresses(identifier)
+        const { stakeKey, addresses } = await getWalletStakeKeyAndAddresses(identifier)
 
-        console.log('Fetched wallet:', wallet.stakeKey)
+        console.log('Fetched wallet:', stakeKey)
+
+        const populateAddresses = []
+
+        for await (const str of addresses) {
+          console.log('Fetching address:', str)
+
+          const wallet = await blockfrost.addresses(str)
+
+          console.log('Fetched address:', wallet.type)
+
+          populateAddresses.push({
+            address: str,
+            isScript: wallet.script,
+          })
+        }
 
         let payload: WalletResponse = {
-          ...wallet,
+          stakeKey,
+          addresses: populateAddresses,
         }
 
         if (withStakePool) {
-          console.log('Fetching wallet stake pool:', wallet.stakeKey)
+          console.log('Fetching wallet stake pool:', stakeKey)
 
-          const account = await blockfrost.accounts(wallet.stakeKey)
+          const account = await blockfrost.accounts(stakeKey)
           const poolId = account.pool_id || ''
 
           console.log('Fetched wallet stake pool:', poolId)
@@ -131,62 +138,31 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
         }
 
         if (withAssets) {
-          console.log('Fetching wallet assets:', wallet.stakeKey)
+          console.log('Fetching wallet assets:', stakeKey)
 
-          const assets = await blockfrost.accountsAddressesAssetsAll(wallet.stakeKey)
+          const assets = await blockfrost.accountsAddressesAssetsAll(stakeKey)
 
           console.log('Fetched wallet assets:', assets.length)
 
-          payload.assets = assets.map((obj) => ({ assetId: obj.unit, count: Number(obj.quantity) }))
+          payload.assets = []
 
-          if (Array.isArray(filterAssetsWithPolicyIds) && filterAssetsWithPolicyIds.length) {
-            payload.assets = payload.assets.filter((obj) => {
-              let isOk = false
+          for await (const obj of assets) {
+            const assetId = obj.unit
+            const amount = Number(obj.quantity)
+            let decimals = 0
 
-              filterAssetsWithPolicyIds.forEach((item: string) => {
-                if (obj.assetId.indexOf(item) === 0) {
-                  isOk = true
-                }
-              })
+            if (amount > 1) {
+              const cardanoTokenRegistry = new CardanoTokenRegistry()
+              const token = await cardanoTokenRegistry.getTokenInformation(assetId)
+              decimals = token.decimals
+            }
 
-              return isOk
+            payload.assets.push({
+              assetId,
+              amount,
+              decimals,
             })
           }
-
-          // if (populateAssets) {
-          //   const populateAssets: components['schemas']['asset'][] = []
-
-          //   for await (const { assetId } of payload.assets) {
-          //     const asset = await blockfrost.assetsById(assetId)
-          //     const defaultKeys = [
-          //       // 'project',
-          //       // 'collection',
-          //       // 'artist',
-          //       'name',
-          //       'description',
-          //       'image',
-          //       'mediaType',
-          //       'files',
-          //       // 'twitter',
-          //       // 'discord',
-          //       // 'website',
-          //     ]
-
-          //     // @ts-ignore
-          //     if (asset.onchain_metadata_standard === 'CIP68v1') {
-          //       Object.entries(asset.onchain_metadata || {}).forEach(([key, val]) => {
-          //         if (!defaultKeys.includes(key.toLowerCase())) {
-          //           // @ts-ignore
-          //           asset.onchain_metadata[key] = fromHex(val as string).slice(1)
-          //         }
-          //       })
-          //     }
-
-          //     populateAssets.push(asset)
-          //   }
-
-          //   payload.assets = populateAssets
-          // }
         }
 
         return res.status(200).json(payload)

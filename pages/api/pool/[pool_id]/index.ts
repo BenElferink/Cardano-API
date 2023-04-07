@@ -1,10 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import blockfrost from '../../../../utils/blockfrost'
+import type { NextApiRequest, NextApiResponse } from 'next'
+import blockfrost from '@/utils/blockfrost'
+import type { Pool } from '@/@types'
 
-export interface PoolResponse {
-  poolId: string
-  ticker: string
-}
+export interface PoolResponse extends Pool {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) => {
   const { method, query } = req
@@ -12,7 +10,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) 
   const poolId = query.pool_id?.toString()
 
   if (!poolId) {
-    return res.status(400).end('Please provide a valid Stake Pool ID')
+    return res.status(400).end()
   }
 
   try {
@@ -40,7 +38,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) 
     console.error(error)
 
     if (error?.message === 'Invalid or malformed pool id format.') {
-      return res.status(404).end(`Stake Pool not found: ${poolId}`)
+      return res.status(400).end(`${error.message} ${poolId}`)
     }
 
     return res.status(500).end()

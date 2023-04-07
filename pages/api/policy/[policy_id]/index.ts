@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '../../../../utils/blockfrost'
 import CnftTools from '@/utils/cnftTools'
 
-export interface PolicyAssetsResponse {
+export interface PolicyResponse {
   policyId: string
   assets: {
     assetId: string
@@ -14,7 +14,7 @@ export interface PolicyAssetsResponse {
   }[]
 }
 
-const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyAssetsResponse>) => {
+const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>) => {
   const { method, query } = req
 
   const policyId = query.policy_id?.toString()

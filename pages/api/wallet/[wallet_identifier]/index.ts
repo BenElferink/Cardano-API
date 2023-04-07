@@ -4,6 +4,8 @@ import blockfrost from '@/utils/blockfrost'
 // import { components } from '@blockfrost/openapi'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
 
+const INVALID_WALLET_IDENTIFIER = 'INVALID_WALLET_IDENTIFIER'
+
 const getWalletStakeKeyAndAddressesFromCborString = async (
   walletIdentifier: string
 ): Promise<{
@@ -56,7 +58,7 @@ const getWalletStakeKeyAndAddresses = async (
     const result = await getWalletStakeKeyAndAddressesFromCborString(walletIdentifier)
 
     if (!result) {
-      throw new Error('Invalid wallet identifer')
+      throw new Error(INVALID_WALLET_IDENTIFIER)
     }
 
     return result
@@ -107,20 +109,34 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
   try {
     switch (method) {
       case 'GET': {
+        console.log('Fetching wallet:', identifier)
+
         const wallet = await getWalletStakeKeyAndAddresses(identifier)
+
+        console.log('Fetched wallet:', wallet.stakeKey)
 
         let payload: WalletResponse = {
           ...wallet,
         }
 
         if (withStakePool) {
+          console.log('Fetching wallet stake pool:', wallet.stakeKey)
+
           const account = await blockfrost.accounts(wallet.stakeKey)
           const poolId = account.pool_id || ''
+
+          console.log('Fetched wallet stake pool:', poolId)
+
           payload.poolId = poolId
         }
 
         if (withAssets) {
+          console.log('Fetching wallet assets:', wallet.stakeKey)
+
           const assets = await blockfrost.accountsAddressesAssetsAll(wallet.stakeKey)
+
+          console.log('Fetched wallet assets:', assets.length)
+
           payload.assets = assets.map((obj) => ({ assetId: obj.unit, count: Number(obj.quantity) }))
 
           if (Array.isArray(filterAssetsWithPolicyIds) && filterAssetsWithPolicyIds.length) {
@@ -184,11 +200,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
   } catch (error: any) {
     console.error(error)
 
-    if (error?.message === 'Invalid wallet identifer') {
+    if (error?.message === INVALID_WALLET_IDENTIFIER) {
       return res.status(400).end('Please provide a valid wallet identifer: $handle / addr1... / stake1...')
     }
 
-    if (error?.status_code === 400 || error?.message === 'The requested component has not been found.') {
+    if (error?.message === 'The requested component has not been found.') {
       return res.status(404).end(`Wallet not found: ${identifier}`)
     }
 

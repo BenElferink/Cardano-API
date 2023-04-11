@@ -14,7 +14,7 @@ interface Owner extends Address {
 }
 
 export interface AssetOwnersResponse {
-  assetId: string
+  tokenId: string
   page: number
   owners: Owner[]
 }
@@ -22,19 +22,19 @@ export interface AssetOwnersResponse {
 const handler = async (req: NextApiRequest, res: NextApiResponse<AssetOwnersResponse>) => {
   const { method, query } = req
 
-  const assetId = query.asset_id?.toString()
+  const tokenId = query.token_id?.toString()
   const page = Number(query.page || 1)
 
-  if (!assetId) {
+  if (!tokenId) {
     return res.status(400).end()
   }
 
   try {
     switch (method) {
       case 'GET': {
-        console.log('Fetching addresses:', assetId)
+        console.log('Fetching addresses:', tokenId)
 
-        const assetAddresses = await blockfrost.assetsAddresses(assetId, {
+        const assetAddresses = await blockfrost.assetsAddresses(tokenId, {
           count: 100,
           page,
           order: 'asc',
@@ -61,7 +61,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetOwnersResp
         }
 
         return res.status(200).json({
-          assetId,
+          tokenId,
           page,
           owners: payload,
         })

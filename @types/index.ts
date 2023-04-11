@@ -31,17 +31,6 @@ export interface Wallet {
   tokens?: Token[]
 }
 
-export interface Pool {
-  poolId: PoolId
-  ticker: string
-  delegators?: StakeKey[]
-}
-
-export interface Transaction {
-  transactionId: TransactionId
-  block: string
-}
-
 export interface RankedToken extends Token {
   rarityRank?: number
 }
@@ -67,4 +56,15 @@ export interface PopulatedToken extends RankedToken {
 export interface Policy {
   policyId: PolicyId
   tokens: Token[] | RankedToken[]
+}
+
+export interface Pool {
+  poolId: PoolId
+  ticker: string
+  delegators?: StakeKey[]
+}
+
+export interface Transaction {
+  transactionId: TransactionId
+  block: string
 }

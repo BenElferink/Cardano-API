@@ -2,6 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '../../../../utils/blockfrost'
 import type { Transaction } from '@/@types'
 
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 export interface TransactionResponse extends Transaction {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<TransactionResponse>) => {

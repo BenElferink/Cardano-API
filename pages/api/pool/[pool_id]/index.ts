@@ -2,6 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '@/utils/blockfrost'
 import type { Pool } from '@/@types'
 
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 export interface PoolResponse extends Pool {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) => {

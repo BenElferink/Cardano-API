@@ -5,6 +5,12 @@ import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
 import type { Wallet } from '@/@types'
 
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 const INVALID_WALLET_IDENTIFIER = 'INVALID_WALLET_IDENTIFIER'
 
 const getWalletStakeKeyAndAddressesFromCborString = async (

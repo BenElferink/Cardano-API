@@ -5,6 +5,12 @@ import { fromHexToString } from '@/functions/formatters/hex'
 import formatIpfsReference from '@/functions/formatters/ipfsReference'
 import type { PopulatedAsset } from '@/@types'
 
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 export interface AssetResponse extends PopulatedAsset {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>) => {

@@ -5,6 +5,12 @@ import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import type { Asset, Policy } from '@/@types'
 import type { RankedPolicyAsset } from '@/utils/cnftTools'
 
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 export interface PolicyResponse extends Policy {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>) => {

@@ -75,8 +75,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
         // }
 
         const payload: PopulatedAsset = {
-          fingerprint,
           assetId,
+          fingerprint,
           policyId,
           name: {
             onChain: assetName,
@@ -87,21 +87,31 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
           attributes,
           quantity: Number(quantity),
           decimals: 0,
+          ticker: '',
         }
 
         if (payload.quantity > 1) {
-          let val: number | null = null
+          let tickerValue: string | null = null
+          let demicalsValue: number | null = null
+
+          if (metadata && metadata.ticker != null) {
+            tickerValue = metadata.ticker
+          }
 
           if (metadata && metadata.decimals != null) {
-            val = metadata.decimals
-          }
-          if (val == null) {
-            const cardanoTokenRegistry = new CardanoTokenRegistry()
-            const { decimals } = await cardanoTokenRegistry.getTokenInformation(assetId)
-            val = decimals
+            demicalsValue = metadata.decimals
           }
 
-          payload.decimals = val
+          if (demicalsValue == null || tickerValue == null) {
+            const cardanoTokenRegistry = new CardanoTokenRegistry()
+            const { ticker, decimals } = await cardanoTokenRegistry.getTokenInformation(assetId)
+
+            tickerValue = ticker
+            demicalsValue = decimals
+          }
+
+          payload.ticker = tickerValue
+          payload.decimals = demicalsValue
         }
 
         const serialNumber = Number(assetName.match(/\d+/g)?.join(''))

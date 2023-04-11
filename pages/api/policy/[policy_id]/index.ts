@@ -42,17 +42,21 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
         for await (const item of policyAssets) {
           const assetId = item.asset
           const quantity = Number(item.quantity)
+          let ticker = ''
           let decimals = 0
 
           if (quantity > 0) {
             if (quantity > 1) {
               const cardanoTokenRegistry = new CardanoTokenRegistry()
               const token = await cardanoTokenRegistry.getTokenInformation(assetId)
+
               decimals = token.decimals
+              ticker = token.ticker
             }
 
             const token: Asset = {
               assetId,
+              ticker,
               quantity,
               decimals,
             }

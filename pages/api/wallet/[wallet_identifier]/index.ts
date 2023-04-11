@@ -144,16 +144,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
           for await (const obj of assets) {
             const assetId = obj.unit
             const quantity = Number(obj.quantity)
+            let ticker = ''
             let decimals = 0
 
             if (quantity > 1) {
               const cardanoTokenRegistry = new CardanoTokenRegistry()
               const token = await cardanoTokenRegistry.getTokenInformation(assetId)
+
               decimals = token.decimals
+              ticker = token.ticker
             }
 
             payload.assets.push({
               assetId,
+              ticker,
               quantity,
               decimals,
             })

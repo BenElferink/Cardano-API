@@ -5,7 +5,7 @@ export interface Address {
 
 export interface Asset {
   assetId: string
-  amount: number
+  quantity: number
   decimals: number
   rarityRank?: number
 }

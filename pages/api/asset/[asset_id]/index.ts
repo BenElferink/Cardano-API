@@ -85,11 +85,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
           image,
           files: (onchain_metadata?.files as PopulatedAsset['files']) || [],
           attributes,
-          amount: Number(quantity),
+          quantity: Number(quantity),
           decimals: 0,
         }
 
-        if (payload.amount > 1) {
+        if (payload.quantity > 1) {
           let val: number | null = null
 
           if (metadata && metadata.decimals != null) {

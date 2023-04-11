@@ -3,7 +3,7 @@ import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
 import blockfrost from '@/utils/blockfrost'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
-import type { Address, Asset } from '@/@types'
+import type { Wallet } from '@/@types'
 
 const INVALID_WALLET_IDENTIFIER = 'INVALID_WALLET_IDENTIFIER'
 
@@ -82,12 +82,7 @@ const getWalletStakeKeyAndAddresses = async (
   }
 }
 
-export interface WalletResponse {
-  stakeKey: string
-  addresses: Address[]
-  poolId?: string
-  assets?: Asset[]
-}
+export interface WalletResponse extends Wallet {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>) => {
   const { method, query } = req
@@ -121,7 +116,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
           })
         }
 
-        let payload: WalletResponse = {
+        let payload: Wallet = {
           stakeKey,
           addresses: populateAddresses,
         }

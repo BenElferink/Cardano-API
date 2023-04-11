@@ -8,6 +8,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) 
   const { method, query } = req
 
   const poolId = query.pool_id?.toString()
+  const withDelegators = !!query.with_delegators && query.with_delegators == 'true'
 
   if (!poolId) {
     return res.status(400).end()
@@ -23,10 +24,30 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) 
 
         console.log('Fetched stake pool:', ticker)
 
-        return res.status(200).json({
+        const payload: Pool = {
           poolId,
           ticker,
-        })
+        }
+
+        if (withDelegators) {
+          console.log('Fetching delegators:', poolId)
+
+          const delegators: Pool['delegators'] = []
+
+          for (let page = 1; true; page++) {
+            const count = 100
+            const fetched = await blockfrost.poolsByIdDelegators(poolId, { count, page })
+
+            delegators.push(...fetched.map((delegator) => delegator.address))
+            if (!fetched.length || fetched.length < count) break
+          }
+
+          console.log('Fetched delegators:', delegators.length)
+
+          payload.delegators = delegators
+        }
+
+        return res.status(200).json(payload)
       }
 
       default: {

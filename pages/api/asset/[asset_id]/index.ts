@@ -43,7 +43,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
               }
             : formatIpfsReference(thumb.replaceAll(',', ''))
 
-        let attributes: AssetResponse['attributes'] = {}
+        let attributes: PopulatedAsset['attributes'] = {}
         if (onchain_metadata) {
           const ignoreKeys = ['name', 'project', 'collection', 'description', 'image', 'mediaType', 'files']
           let meta = {}
@@ -74,7 +74,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
         //   })
         // }
 
-        const payload: AssetResponse = {
+        const payload: PopulatedAsset = {
           fingerprint,
           assetId,
           policyId,
@@ -83,7 +83,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
             display: (onchain_metadata?.name as string) || '',
           },
           image,
-          files: (onchain_metadata?.files as AssetResponse['files']) || [],
+          files: (onchain_metadata?.files as PopulatedAsset['files']) || [],
           attributes,
           amount: Number(quantity),
           decimals: 0,

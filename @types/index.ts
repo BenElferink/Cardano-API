@@ -10,10 +10,27 @@ export interface Asset {
   rarityRank?: number
 }
 
-export interface AssetFile {
-  src: string
-  mediaType: string
-  name: string
+export interface Wallet {
+  stakeKey: string
+  addresses: Address[]
+  poolId?: string
+  assets?: Asset[]
+}
+
+export interface Policy {
+  policyId: string
+  assets: Asset[]
+}
+
+export interface Pool {
+  poolId: string
+  ticker: string
+  delegators?: string[]
+}
+
+export interface Transaction {
+  transactionId: string
+  block: string
 }
 
 export interface PopulatedAsset extends Asset {
@@ -27,14 +44,13 @@ export interface PopulatedAsset extends Asset {
     ipfs: string
     url: string
   }
-  files: AssetFile[]
+  files: {
+    src: string
+    mediaType: string
+    name: string
+  }[]
   attributes: {
     [key: string]: any
   }
   serialNumber?: number
-}
-
-export interface Pool {
-  poolId: string
-  ticker: string
 }

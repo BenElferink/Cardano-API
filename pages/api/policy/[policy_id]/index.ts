@@ -2,13 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '@/utils/blockfrost'
 import CnftTools from '@/utils/cnftTools'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
-import type { Asset } from '@/@types'
+import type { Asset, Policy } from '@/@types'
 import type { RankedPolicyAsset } from '@/utils/cnftTools'
 
-export interface PolicyResponse {
-  policyId: string
-  assets: Asset[]
-}
+export interface PolicyResponse extends Policy {}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>) => {
   const { method, query } = req

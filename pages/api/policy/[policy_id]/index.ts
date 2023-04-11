@@ -11,6 +11,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
   const { method, query } = req
 
   const policyId = query.policy_id?.toString()
+  const withAllAssets = !!query.with_all_assets && query.with_all_assets == 'true'
   const withRanks = !!query.with_ranks && query.with_ranks == 'true'
 
   if (!policyId) {
@@ -33,7 +34,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
 
         console.log('Fetching assets:', policyId)
 
-        const policyAssets = await blockfrost.assetsPolicyByIdAll(policyId)
+        const policyAssets = withAllAssets
+          ? await blockfrost.assetsPolicyByIdAll(policyId)
+          : await blockfrost.assetsPolicyById(policyId)
 
         console.log('Fetched assets:', policyAssets.length)
 

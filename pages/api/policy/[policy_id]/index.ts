@@ -4,6 +4,7 @@ import CnftTools from '@/utils/cnftTools'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import type { Asset, Policy } from '@/@types'
 import type { RankedPolicyAsset } from '@/utils/cnftTools'
+import { fromHexToString } from '@/functions/formatters/hex'
 
 export const config = {
   api: {
@@ -61,6 +62,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
 
               decimals = token.decimals
               ticker = token.ticker
+
+              if (!ticker) {
+                console.log('Fetching asset:', assetId)
+
+                const { asset_name } = await blockfrost.assetsById(assetId)
+                ticker = fromHexToString(asset_name || '')
+
+                console.log('Fetched asset:', ticker)
+              }
             }
 
             const token: Asset = {

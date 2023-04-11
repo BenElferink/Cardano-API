@@ -116,7 +116,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetResponse>)
             demicalsValue = decimals
           }
 
-          payload.ticker = tickerValue
+          payload.ticker = tickerValue || assetName
           payload.decimals = demicalsValue
         }
 

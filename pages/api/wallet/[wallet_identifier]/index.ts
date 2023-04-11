@@ -4,6 +4,7 @@ import blockfrost from '@/utils/blockfrost'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
 import type { Wallet } from '@/@types'
+import { fromHexToString } from '@/functions/formatters/hex'
 
 export const config = {
   api: {
@@ -159,6 +160,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
 
               decimals = token.decimals
               ticker = token.ticker
+
+              if (!ticker) {
+                console.log('Fetching asset:', assetId)
+
+                const { asset_name } = await blockfrost.assetsById(assetId)
+                ticker = fromHexToString(asset_name || '')
+
+                console.log('Fetched asset:', ticker)
+              }
             }
 
             payload.assets.push({

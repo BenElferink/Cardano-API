@@ -3,8 +3,9 @@ import blockfrost from '@/utils/blockfrost'
 import CnftTools from '@/utils/cnftTools'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { fromHexToString } from '@/functions/formatters/hex'
-import type { Asset, Policy } from '@/@types'
-import type { RankedPolicyAsset } from '@/utils/cnftTools'
+import type { Token, Policy, RankedToken } from '@/@types'
+import type { RankedAsset } from '@/utils/cnftTools'
+import { fromChainToDisplay } from '@/functions/formatters/tokenAmount'
 
 export const config = {
   api: {
@@ -18,7 +19,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
   const { method, query } = req
 
   const policyId = query.policy_id?.toString()
-  const withAllAssets = !!query.with_all_assets && query.with_all_assets == 'true'
+  const allTokens = !!query.all_tokens && query.all_tokens == 'true'
   const withRanks = !!query.with_ranks && query.with_ranks == 'true'
 
   if (!policyId) {
@@ -28,68 +29,74 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
   try {
     switch (method) {
       case 'GET': {
-        const rankedAssets: RankedPolicyAsset[] = []
+        const rankedAssets: RankedAsset[] = []
 
         if (withRanks) {
           const cnftTools = new CnftTools()
-          const fetched = await cnftTools.getPolicyAssets(policyId)
+          const fetched = await cnftTools.getRankedAssets(policyId)
+
           if (!fetched) {
             return res.status(400).end(`Policy ID does not have ranks on cnft.tools: ${policyId}`)
           }
+
           rankedAssets.push(...fetched)
         }
 
-        console.log('Fetching assets:', policyId)
+        console.log('Fetching tokens:', policyId)
 
-        const policyAssets = withAllAssets
+        const fetchedTokens = allTokens
           ? await blockfrost.assetsPolicyByIdAll(policyId)
           : await blockfrost.assetsPolicyById(policyId)
 
-        console.log('Fetched assets:', policyAssets.length)
+        console.log('Fetched tokens:', fetchedTokens.length)
 
-        const assets = []
+        const tokens = []
 
-        for await (const item of policyAssets) {
-          const assetId = item.asset
-          const quantity = Number(item.quantity)
-          let ticker = ''
-          let decimals = 0
+        for await (const item of fetchedTokens) {
+          const tokenId = item.asset
+          const tokenAmountOnChain = Number(item.quantity)
+          let tokenAmountDecimals = 0
 
-          if (quantity > 0) {
-            if (quantity > 1) {
+          const isFungible = tokenAmountOnChain > 1
+          const tokenNameOnChain = fromHexToString(tokenId.replace(policyId, ''))
+          let tokenNameTicker = ''
+
+          if (tokenAmountOnChain > 0) {
+            if (isFungible) {
               const cardanoTokenRegistry = new CardanoTokenRegistry()
-              const token = await cardanoTokenRegistry.getTokenInformation(assetId)
+              const token = await cardanoTokenRegistry.getTokenInformation(tokenId)
 
-              decimals = token.decimals
-              ticker = token.ticker
-
-              if (!ticker) {
-                console.log('Fetching asset:', assetId)
-
-                ticker = fromHexToString(assetId.replace(policyId, ''))
-
-                console.log('Fetched asset:', ticker)
-              }
+              tokenAmountDecimals = token.decimals
+              tokenNameTicker = token.ticker
             }
 
-            const token: Asset = {
-              assetId,
-              ticker,
-              quantity,
-              decimals,
+            const token: Token = {
+              tokenId,
+              isFungible,
+              tokenAmount: {
+                onChain: tokenAmountOnChain,
+                decimals: tokenAmountDecimals,
+                display: fromChainToDisplay(tokenAmountOnChain, tokenAmountDecimals),
+              },
+              tokenName: {
+                onChain: tokenNameOnChain,
+                ticker: tokenNameTicker,
+                display: '',
+              },
             }
 
-            if (rankedAssets.length) {
-              token.rarityRank = rankedAssets.find((ranked) => ranked.assetId === assetId)?.rank || 0
+            if (withRanks) {
+              ;(token as RankedToken).rarityRank =
+                rankedAssets.find((ranked) => ranked.assetId === tokenId)?.rank || 0
             }
 
-            assets.push(token)
+            tokens.push(token)
           }
         }
 
         return res.status(200).json({
           policyId,
-          assets,
+          tokens,
         })
       }
 

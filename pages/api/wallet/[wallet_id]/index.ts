@@ -4,7 +4,8 @@ import blockfrost from '@/utils/blockfrost'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
 import { fromHexToString } from '@/functions/formatters/hex'
-import type { Wallet } from '@/@types'
+import { fromChainToDisplay } from '@/functions/formatters/tokenAmount'
+import type { Token, Wallet } from '@/@types'
 
 export const config = {
   api: {
@@ -94,21 +95,22 @@ export interface WalletResponse extends Wallet {}
 const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>) => {
   const { method, query } = req
 
-  const identifier = query.wallet_identifier?.toString() as string
+  const walletId = query.wallet_id?.toString() as string
 
   const withStakePool = !!query.with_stake_pool && query.with_stake_pool == 'true'
-  const withAssets = !!query.with_assets && query.with_assets == 'true'
+  const withTokens = !!query.with_tokens && query.with_tokens == 'true'
+  // const populateTokens = !!query.populate_tokens && query.populate_tokens == 'true'
 
   try {
     switch (method) {
       case 'GET': {
-        console.log('Fetching wallet:', identifier)
+        console.log('Fetching wallet:', walletId)
 
-        const { stakeKey, addresses } = await getWalletStakeKeyAndAddresses(identifier)
+        const { stakeKey, addresses } = await getWalletStakeKeyAndAddresses(walletId)
 
         console.log('Fetched wallet:', stakeKey)
 
-        const populateAddresses = []
+        const populatedAddresses = []
 
         for await (const str of addresses) {
           console.log('Fetching address:', str)
@@ -117,15 +119,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
 
           console.log('Fetched address:', wallet.type)
 
-          populateAddresses.push({
+          populatedAddresses.push({
             address: str,
             isScript: wallet.script,
           })
         }
 
-        let payload: Wallet = {
+        let wallet: Wallet = {
           stakeKey,
-          addresses: populateAddresses,
+          addresses: populatedAddresses,
         }
 
         if (withStakePool) {
@@ -136,51 +138,57 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
 
           console.log('Fetched wallet stake pool:', poolId)
 
-          payload.poolId = poolId
+          wallet.poolId = poolId
         }
 
-        if (withAssets) {
-          console.log('Fetching wallet assets:', stakeKey)
+        if (withTokens) {
+          console.log('Fetching wallet tokens:', stakeKey)
 
-          const assets = await blockfrost.accountsAddressesAssetsAll(stakeKey)
+          const fetchedTokens = await blockfrost.accountsAddressesAssetsAll(stakeKey)
 
-          console.log('Fetched wallet assets:', assets.length)
+          console.log('Fetched wallet tokens:', fetchedTokens.length)
 
-          payload.assets = []
+          wallet.tokens = []
 
-          for await (const obj of assets) {
-            const assetId = obj.unit
-            const quantity = Number(obj.quantity)
-            let ticker = ''
-            let decimals = 0
+          for await (const obj of fetchedTokens) {
+            const tokenId = obj.unit
+            const tokenAmountOnChain = Number(obj.quantity)
+            let tokenAmountDecimals = 0
 
-            if (quantity > 1) {
+            const isFungible = tokenAmountOnChain > 1
+            let tokenNameTicker = ''
+
+            if (isFungible) {
               const cardanoTokenRegistry = new CardanoTokenRegistry()
-              const token = await cardanoTokenRegistry.getTokenInformation(assetId)
+              const { decimals, ticker } = await cardanoTokenRegistry.getTokenInformation(tokenId)
 
-              decimals = token.decimals
-              ticker = token.ticker
+              tokenAmountDecimals = decimals
+              tokenNameTicker = ticker
+            }
 
-              if (!ticker) {
-                console.log('Fetching asset:', assetId)
+            const token: Token = {
+              tokenId,
+              isFungible,
+              tokenAmount: {
+                onChain: tokenAmountOnChain,
+                decimals: tokenAmountDecimals,
+                display: fromChainToDisplay(tokenAmountOnChain, tokenAmountDecimals),
+              },
+            }
 
-                const { asset_name } = await blockfrost.assetsById(assetId)
-                ticker = fromHexToString(asset_name || '')
-
-                console.log('Fetched asset:', ticker)
+            if (isFungible) {
+              token.tokenName = {
+                onChain: '',
+                ticker: tokenNameTicker,
+                display: '',
               }
             }
 
-            payload.assets.push({
-              assetId,
-              ticker,
-              quantity,
-              decimals,
-            })
+            wallet.tokens.push(token)
           }
         }
 
-        return res.status(200).json(payload)
+        return res.status(200).json(wallet)
       }
 
       default: {
@@ -196,7 +204,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
     }
 
     if (error?.message === 'The requested component has not been found.') {
-      return res.status(404).end(`Wallet not found: ${identifier}`)
+      return res.status(404).end(`Wallet not found: ${walletId}`)
     }
 
     return res.status(500).end()

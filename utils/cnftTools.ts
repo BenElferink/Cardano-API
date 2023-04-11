@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-interface FetchedRankedPolicyAsset {
+interface FetchedExternal {
   assetID: string // '1'
   assetName: string // 'on-chain name'
   name: string // 'display name'
@@ -13,7 +13,7 @@ interface FetchedRankedPolicyAsset {
   [lowercasedTraitCategory: string]: any // eyewear: '(U) 3D Glasses'
 }
 
-export interface RankedPolicyAsset {
+export interface RankedAsset {
   assetId: string
   rank: number
   attributes: {
@@ -28,14 +28,14 @@ class CnftTools {
     this.baseUrl = 'https://api.cnft.tools'
   }
 
-  getPolicyAssets = (policyId: string): Promise<RankedPolicyAsset[] | null> => {
+  getRankedAssets = (policyId: string): Promise<RankedAsset[] | null> => {
     const uri = `${this.baseUrl}/api/external/${policyId}`
 
     return new Promise(async (resolve, reject) => {
       try {
         console.log('Fetching ranked assets:', policyId)
 
-        const { data } = await axios.get<FetchedRankedPolicyAsset[]>(uri, {
+        const { data } = await axios.get<FetchedExternal[]>(uri, {
           headers: {
             'Accept-Encoding': 'application/json',
           },

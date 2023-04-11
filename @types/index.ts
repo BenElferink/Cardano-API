@@ -1,46 +1,55 @@
+type PolicyId = string
+type TokenId = string
+type PoolId = string
+type TransactionId = string
+type StakeKey = string
+
 export interface Address {
   address: string
-  isScript?: boolean
+  isScript: boolean
 }
 
-export interface Asset {
-  assetId: string
-  ticker: string
-  quantity: number
-  decimals: number
-  rarityRank?: number
+export interface Token {
+  tokenId: TokenId
+  isFungible: boolean
+  tokenAmount: {
+    onChain: number
+    decimals: number
+    display: number
+  }
+  tokenName?: {
+    onChain: string
+    ticker: string
+    display: string
+  }
 }
 
 export interface Wallet {
-  stakeKey: string
+  stakeKey: StakeKey
   addresses: Address[]
-  poolId?: string
-  assets?: Asset[]
-}
-
-export interface Policy {
-  policyId: string
-  assets: Asset[]
+  poolId?: PoolId
+  tokens?: Token[]
 }
 
 export interface Pool {
-  poolId: string
+  poolId: PoolId
   ticker: string
-  delegators?: string[]
+  delegators?: StakeKey[]
 }
 
 export interface Transaction {
-  transactionId: string
+  transactionId: TransactionId
   block: string
 }
 
-export interface PopulatedAsset extends Asset {
+export interface RankedToken extends Token {
+  rarityRank?: number
+}
+
+export interface PopulatedToken extends RankedToken {
   fingerprint: string
-  policyId: string
-  name: {
-    onChain: string
-    display: string
-  }
+  policyId: PolicyId
+  serialNumber?: number
   image: {
     ipfs: string
     url: string
@@ -53,5 +62,9 @@ export interface PopulatedAsset extends Asset {
   attributes: {
     [key: string]: any
   }
-  serialNumber?: number
+}
+
+export interface Policy {
+  policyId: PolicyId
+  tokens: Token[] | RankedToken[]
 }

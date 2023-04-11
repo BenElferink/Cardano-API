@@ -2,9 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '@/utils/blockfrost'
 import CnftTools from '@/utils/cnftTools'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
+import { fromHexToString } from '@/functions/formatters/hex'
 import type { Asset, Policy } from '@/@types'
 import type { RankedPolicyAsset } from '@/utils/cnftTools'
-import { fromHexToString } from '@/functions/formatters/hex'
 
 export const config = {
   api: {
@@ -66,8 +66,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
               if (!ticker) {
                 console.log('Fetching asset:', assetId)
 
-                const { asset_name } = await blockfrost.assetsById(assetId)
-                ticker = fromHexToString(asset_name || '')
+                ticker = fromHexToString(assetId.replace(policyId, ''))
 
                 console.log('Fetched asset:', ticker)
               }

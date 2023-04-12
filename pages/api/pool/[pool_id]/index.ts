@@ -64,7 +64,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) 
   } catch (error: any) {
     console.error(error)
 
-    if (error?.message === 'Invalid or malformed pool id format.') {
+    if (
+      ['The requested component has not been found.', 'Invalid or malformed pool id format.'].includes(
+        error?.message
+      )
+    ) {
       return res.status(400).end(`${error.message} ${poolId}`)
     }
 

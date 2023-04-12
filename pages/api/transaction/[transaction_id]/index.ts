@@ -45,7 +45,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TransactionResp
   } catch (error: any) {
     console.error(error)
 
-    if (error?.message === 'The requested component has not been found.') {
+    if (['The requested component has not been found.'].includes(error?.message)) {
       return res.status(404).end(`${error.message} ${transactionId}`)
     }
 

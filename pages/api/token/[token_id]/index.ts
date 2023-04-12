@@ -145,8 +145,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
         return res.status(405).end()
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(error)
+
+    if (
+      ['The requested component has not been found.', 'Invalid or malformed asset format.'].includes(
+        error?.message
+      )
+    ) {
+      return res.status(404).end(`Token not found: ${tokenId}`)
+    }
 
     return res.status(500).end()
   }

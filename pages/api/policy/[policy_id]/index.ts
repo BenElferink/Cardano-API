@@ -108,7 +108,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
   } catch (error: any) {
     console.error(error)
 
-    if (error?.message === 'Invalid or malformed policy format.') {
+    if (
+      ['The requested component has not been found.', 'Invalid or malformed policy format.'].includes(
+        error?.message
+      )
+    ) {
       return res.status(400).end(`${error.message} ${policyId}`)
     }
 

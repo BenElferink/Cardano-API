@@ -58,8 +58,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
           let tokenAmountDecimals = 0
 
           const isFungible = tokenAmountOnChain > 1
-          const tokenNameHexed = tokenId.replace(policyId, '')
-          const tokenNameOnChain = tokenNameHexed.length !== tokenId.length ? fromHexToString(tokenNameHexed) : ''
+          const tokenNameOnChain = fromHexToString(tokenId.replace(policyId, ''))
           let tokenNameTicker = ''
 
           if (tokenAmountOnChain > 0) {

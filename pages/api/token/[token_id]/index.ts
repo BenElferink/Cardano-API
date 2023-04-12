@@ -44,7 +44,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
         let tokenAmountDecimals = 0
 
         const isFungible = tokenAmountOnChain > 1
-        const tokenNameOnChain = fromHexToString(asset_name || tokenId.replace(policyId, ''))
+        const tokenNameHexed = asset_name || tokenId.replace(policyId, '')
+        const tokenNameOnChain = tokenNameHexed.length !== tokenId.length ? fromHexToString(tokenNameHexed) : ''
         let tokenNameTicker = ''
         let tokenNameDisplay = ''
 

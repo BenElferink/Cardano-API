@@ -3,7 +3,6 @@ import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
 import blockfrost from '@/utils/blockfrost'
 import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
-import { fromHexToString } from '@/functions/formatters/hex'
 import { fromChainToDisplay } from '@/functions/formatters/tokenAmount'
 import type { Token, Wallet } from '@/@types'
 

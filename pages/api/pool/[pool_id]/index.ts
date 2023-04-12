@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
 import blockfrost from '@/utils/blockfrost'
 import type { Pool } from '@/@types'
+import { fromHexToString } from '@/functions/formatters/hex'
 
 export const config = {
   api: {
@@ -18,6 +20,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PoolResponse>) 
 
   if (!poolId) {
     return res.status(400).end()
+  }
+
+  if (poolId.indexOf('pool1') !== 0) {
+    return res.status(400).end(`Please use a BECH 32 stake pool ID (starts with "pool1"...) ${poolId}`)
   }
 
   try {

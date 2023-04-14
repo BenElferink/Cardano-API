@@ -176,7 +176,7 @@ class JpgStore {
     })
   }
 
-  getToken = (tokenId: string): Promise<MarketToken> => {
+  getToken = (tokenId: string): Promise<MarketToken[]> => {
     const uri = `${this.baseUrl}/token/${tokenId}`
 
     return new Promise(async (resolve, reject) => {
@@ -208,22 +208,9 @@ class JpgStore {
             payload.bundledTokens = listing.bundled_assets?.map((item) => item.asset_id) || []
           }
 
-          return resolve(payload)
+          return resolve([payload])
         } else {
-          const payload: MarketToken = {
-            tokenId,
-            price: 0,
-            // @ts-ignore
-            date: '',
-            // @ts-ignore
-            marketplace: '',
-            // @ts-ignore
-            activityType: '',
-            // @ts-ignore
-            listingType: '',
-          }
-
-          return resolve(payload)
+          return resolve([])
         }
       } catch (error) {
         return reject(error)

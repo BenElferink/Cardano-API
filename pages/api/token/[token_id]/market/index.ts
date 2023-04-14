@@ -4,7 +4,10 @@ import type { MarketToken } from '@/@types'
 
 const jpgStore = new JpgStore()
 
-export interface TokenMarketActivityResponse extends MarketToken {}
+export interface TokenMarketActivityResponse {
+  tokenId: string
+  items: MarketToken[]
+}
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<TokenMarketActivityResponse>) => {
   const { method, query } = req
@@ -20,7 +23,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenMarketActi
       case 'GET': {
         const payload = await jpgStore.getToken(tokenId)
 
-        return res.status(200).json(payload)
+        return res.status(200).json({
+          tokenId,
+          items: payload,
+        })
       }
 
       default: {

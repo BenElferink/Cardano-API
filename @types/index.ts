@@ -1,8 +1,12 @@
-type PolicyId = string
-type TokenId = string
-type PoolId = string
-type TransactionId = string
-type StakeKey = string
+export type PolicyId = string
+export type TokenId = string
+export type PoolId = string
+export type TransactionId = string
+export type StakeKey = string
+
+export type Marketplace = 'jpg.store'
+export type ActivityType = 'LIST' | 'DELIST' | 'BUY' | 'SELL' | 'UPDATE'
+export type ListingType = 'SINGLE' | 'BUNDLE' | 'UNKNOWN'
 
 export interface Address {
   address: string
@@ -51,6 +55,17 @@ export interface PopulatedToken extends RankedToken {
   attributes: {
     [key: string]: any
   }
+}
+
+export interface MarketToken {
+  tokenId: string
+  signingAddress?: string
+  price: number
+  date: Date
+  marketplace: Marketplace
+  activityType: ActivityType
+  listingType: ListingType
+  bundledTokens?: string[]
 }
 
 export interface Policy {

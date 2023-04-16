@@ -20,6 +20,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
 
   const policyId = query.policy_id?.toString()
   const allTokens = !!query.all_tokens && query.all_tokens == 'true'
+  const withBurned = !!query.with_burned && query.with_burned == 'true'
   const withRanks = !!query.with_ranks && query.with_ranks == 'true'
 
   if (!policyId) {
@@ -61,7 +62,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
           const tokenNameOnChain = fromHexToString(tokenId.replace(policyId, ''))
           let tokenNameTicker = ''
 
-          if (tokenAmountOnChain > 0) {
+          if (tokenAmountOnChain > 0 || withBurned) {
             if (isFungible) {
               const cardanoTokenRegistry = new CardanoTokenRegistry()
               const token = await cardanoTokenRegistry.getTokenInformation(tokenId)

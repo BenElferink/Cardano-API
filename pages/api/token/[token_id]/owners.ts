@@ -8,9 +8,10 @@ export const config = {
   },
 }
 
-interface Owner extends Address {
+interface Owner {
   quantity: number
   stakeKey: string
+  addresses: Address[]
 }
 
 export interface AssetOwnersResponse {
@@ -55,8 +56,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AssetOwnersResp
           payload.push({
             quantity: Number(quantity),
             stakeKey,
-            address: wallet.address,
-            isScript: wallet.script,
+            addresses: [
+              {
+                address: wallet.address,
+                isScript: wallet.script,
+              },
+            ],
           })
         }
 

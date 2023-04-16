@@ -96,9 +96,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
 
   const walletId = query.wallet_id?.toString() as string
 
+  const allAddresses = !!query.all_addresses && query.all_addresses == 'true'
   const withStakePool = !!query.with_stake_pool && query.with_stake_pool == 'true'
   const withTokens = !!query.with_tokens && query.with_tokens == 'true'
-  // const populateTokens = !!query.populate_tokens && query.populate_tokens == 'true'
 
   try {
     switch (method) {
@@ -111,17 +111,21 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
 
         const populatedAddresses = []
 
-        for await (const str of addresses) {
-          console.log('Fetching address:', str)
+        for (let idx = 0; idx < addresses.length; idx++) {
+          const addr = addresses[idx]
 
-          const wallet = await blockfrost.addresses(str)
+          console.log('Fetching address:', addr)
 
-          console.log('Fetched address:', wallet.type)
+          const { type, script } = await blockfrost.addresses(addr)
+
+          console.log('Fetched address:', type)
 
           populatedAddresses.push({
-            address: str,
-            isScript: wallet.script,
+            address: addr,
+            isScript: script,
           })
+
+          if (!allAddresses) break
         }
 
         let wallet: Wallet = {

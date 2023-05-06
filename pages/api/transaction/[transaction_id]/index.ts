@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '../../../../utils/blockfrost'
-import type { Transaction } from '@/@types'
+import type { Transaction, Utxo } from '@/@types'
 
 export const config = {
   api: {
@@ -14,6 +14,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TransactionResp
   const { method, query } = req
 
   const transactionId = query.transaction_id?.toString()
+  const withUtxos = !!query.with_utxos && query.with_utxos == 'true'
 
   if (!transactionId) {
     return res.status(400).end()
@@ -29,9 +30,53 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TransactionResp
 
         console.log('Fetched TX:', block)
 
-        const payload = {
+        const payload: Transaction = {
           transactionId,
           block,
+        }
+
+        if (withUtxos) {
+          console.log('Fetching UTXOs:', transactionId)
+
+          const txUtxos = await blockfrost.txsUtxos(transactionId)
+          const utxos: Utxo[] = []
+
+          for (const input of txUtxos.inputs) {
+            const fromAddress = input.address
+
+            for (const output of txUtxos.outputs) {
+              const toAddress = output.address
+
+              if (toAddress !== fromAddress) {
+                const tokens: Utxo['tokens'] = []
+
+                output.amount.forEach(({ unit, quantity }) => {
+                  if (unit !== 'lovelace' && !!input.amount.find((inp) => inp.unit === unit)) {
+                    tokens.push({
+                      tokenId: unit,
+                      tokenAmount: {
+                        onChain: Number(quantity),
+                      },
+                    })
+                  }
+                })
+
+                if (tokens.length) {
+                  utxos.push({
+                    address: {
+                      from: fromAddress,
+                      to: toAddress,
+                    },
+                    tokens,
+                  })
+                }
+              }
+            }
+          }
+
+          console.log('Fetched UTXOs:', utxos.length)
+
+          payload.utxos = utxos
         }
 
         return res.status(200).json(payload)

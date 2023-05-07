@@ -69,7 +69,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
 
         const thumb = onchain_metadata?.image?.toString() || ''
         const image =
-          thumb.indexOf('data:') !== -1
+          thumb.indexOf('data:') === 0 || thumb.indexOf('https://') === 0
             ? {
                 ipfs: '',
                 url: thumb,

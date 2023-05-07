@@ -71,18 +71,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           ? Array.isArray(onchain_metadata.image)
             ? onchain_metadata.image.join('')
             : onchain_metadata.image.toString()
+          : metadata?.logo
+          ? `data:image/png;base64,${metadata?.logo}`
           : ''
 
         const image =
-          thumb.indexOf('data:') === 0
+          thumb.indexOf('data:') === 0 || thumb.indexOf('https:') === 0
             ? {
                 ipfs: '',
                 url: thumb,
-              }
-            : thumb.indexOf('https://') === 0
-            ? {
-                ipfs: '',
-                url: thumb.replaceAll(',', ''),
               }
             : formatIpfsReference(thumb.replaceAll(',', ''))
 

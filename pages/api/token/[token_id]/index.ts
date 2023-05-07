@@ -67,12 +67,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           tokenNameTicker = _ticker
         }
 
-        const thumb = onchain_metadata?.image?.toString() || ''
+        const thumb = onchain_metadata?.image
+          ? Array.isArray(onchain_metadata.image)
+            ? onchain_metadata.image.join('')
+            : onchain_metadata.image.toString()
+          : ''
+
         const image =
-          thumb.indexOf('data:') === 0 || thumb.indexOf('https://') === 0
+          thumb.indexOf('data:') === 0
             ? {
                 ipfs: '',
                 url: thumb,
+              }
+            : thumb.indexOf('https://') === 0
+            ? {
+                ipfs: '',
+                url: thumb.replaceAll(',', ''),
               }
             : formatIpfsReference(thumb.replaceAll(',', ''))
 

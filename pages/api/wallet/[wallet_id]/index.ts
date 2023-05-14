@@ -210,6 +210,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
       [
         'The requested component has not been found.',
         'Invalid address for this network or malformed address format.',
+        'Invalid or malformed stake address format.',
       ].includes(error?.message)
     ) {
       return res.status(404).end(`Wallet not found: ${walletId}`)

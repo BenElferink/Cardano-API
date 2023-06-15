@@ -64,11 +64,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
 
           if (tokenAmountOnChain > 0 || withBurned) {
             if (isFungible) {
-              const cardanoTokenRegistry = new CardanoTokenRegistry()
-              const token = await cardanoTokenRegistry.getTokenInformation(tokenId)
+              try {
+                const cardanoTokenRegistry = new CardanoTokenRegistry()
+                const { decimals, ticker } = await cardanoTokenRegistry.getTokenInformation(tokenId)
 
-              tokenAmountDecimals = token.decimals
-              tokenNameTicker = token.ticker
+                tokenAmountDecimals = decimals
+                tokenNameTicker = ticker
+              } catch (error) {
+                console.log('Fetching token:', tokenId)
+
+                const { fingerprint, metadata } = await blockfrost.assetsById(tokenId)
+
+                console.log('Fetched token:', fingerprint)
+
+                tokenAmountDecimals = metadata?.decimals || 0
+                tokenNameTicker = metadata?.ticker || ''
+              }
             }
 
             const token: Token = {

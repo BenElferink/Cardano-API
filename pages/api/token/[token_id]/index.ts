@@ -38,7 +38,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           metadata,
         } = await blockfrost.assetsById(tokenId)
 
-        console.log('Fetched asset:', fingerprint)
+        console.log('Fetched token:', fingerprint)
 
         const tokenAmountOnChain = Number(quantity)
         let tokenAmountDecimals = 0
@@ -56,11 +56,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           if (metadata && metadata.ticker != null) _ticker = metadata.ticker
 
           if (_decimals == null || _ticker == null) {
-            const cardanoTokenRegistry = new CardanoTokenRegistry()
-            const { ticker, decimals } = await cardanoTokenRegistry.getTokenInformation(tokenId)
+            try {
+              const cardanoTokenRegistry = new CardanoTokenRegistry()
+              const { ticker, decimals } = await cardanoTokenRegistry.getTokenInformation(tokenId)
 
-            _decimals = decimals
-            _ticker = ticker
+              _decimals = decimals
+              _ticker = ticker
+            } catch (error) {
+              _decimals = 0
+              _ticker = ''
+            }
           }
 
           tokenAmountDecimals = _decimals
@@ -119,11 +124,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
         }
 
         const payload: PopulatedToken = {
+          policyId,
           tokenId,
           fingerprint,
-          policyId,
-          serialNumber: Number(tokenNameOnChain.match(/\d+/g)?.join('')) || 0,
           isFungible,
+          serialNumber: Number(tokenNameOnChain.match(/\d+/g)?.join('')) || 0,
           tokenAmount: {
             onChain: Number(quantity),
             decimals: tokenAmountDecimals,

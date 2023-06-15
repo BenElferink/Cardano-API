@@ -67,4 +67,6 @@ class CardanoTokenRegistry {
   }
 }
 
-export default CardanoTokenRegistry
+const cardanoTokenRegistry = new CardanoTokenRegistry()
+
+export default cardanoTokenRegistry

@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '@/utils/blockfrost'
-import CnftTools from '@/utils/cnftTools'
-import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
+import cnftTools from '@/utils/cnftTools'
 import { fromHexToString } from '@/functions/formatters/hex'
-import type { Token, Policy, RankedToken } from '@/@types'
-import type { RankedAsset } from '@/utils/cnftTools'
 import { fromChainToDisplay } from '@/functions/formatters/tokenAmount'
+import resolveTokenRegisteredMetadata from '@/functions/resolvers/tokenRegisteredMetadata'
+import type { Token, Policy, RankedToken } from '@/@types'
+import type { PolicyRanked } from '@/utils/cnftTools'
 
 export const config = {
   api: {
@@ -30,17 +30,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
   try {
     switch (method) {
       case 'GET': {
-        const rankedAssets: RankedAsset[] = []
+        let rankedAssets: PolicyRanked = {}
 
         if (withRanks) {
-          const cnftTools = new CnftTools()
-          const fetched = await cnftTools.getRankedAssets(policyId)
+          const fetched = await cnftTools.getPolicyRanks(policyId)
 
           if (!fetched) {
             return res.status(400).end(`Policy ID does not have ranks on cnft.tools: ${policyId}`)
           }
 
-          rankedAssets.push(...fetched)
+          rankedAssets = fetched
         }
 
         console.log('Fetching tokens:', policyId)
@@ -64,22 +63,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
 
           if (tokenAmountOnChain > 0 || withBurned) {
             if (isFungible) {
-              try {
-                const cardanoTokenRegistry = new CardanoTokenRegistry()
-                const { decimals, ticker } = await cardanoTokenRegistry.getTokenInformation(tokenId)
+              const { decimals, ticker } = await resolveTokenRegisteredMetadata(tokenId)
 
-                tokenAmountDecimals = decimals
-                tokenNameTicker = ticker
-              } catch (error) {
-                console.log('Fetching token:', tokenId)
-
-                const { fingerprint, metadata } = await blockfrost.assetsById(tokenId)
-
-                console.log('Fetched token:', fingerprint)
-
-                tokenAmountDecimals = metadata?.decimals || 0
-                tokenNameTicker = metadata?.ticker || ''
-              }
+              tokenAmountDecimals = decimals
+              tokenNameTicker = ticker
             }
 
             const token: Token = {
@@ -98,8 +85,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<PolicyResponse>
             }
 
             if (withRanks) {
-              ;(token as RankedToken).rarityRank =
-                rankedAssets.find((ranked) => ranked.assetId === tokenId)?.rank || 0
+              const tokenName = fromHexToString(tokenId.replace(policyId, ''))
+              const rarityRank = Number(rankedAssets[tokenName] || 0)
+
+              ;(token as RankedToken).rarityRank = rarityRank
             }
 
             tokens.push(token)

@@ -264,4 +264,6 @@ class JpgStore {
   }
 }
 
-export default JpgStore
+const jpgStore = new JpgStore()
+
+export default jpgStore

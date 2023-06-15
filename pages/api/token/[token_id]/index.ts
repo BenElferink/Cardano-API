@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import blockfrost from '@/utils/blockfrost'
-import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
 import { fromHexToString } from '@/functions/formatters/hex'
 import { fromChainToDisplay } from '@/functions/formatters/tokenAmount'
 import formatIpfsReference from '@/functions/formatters/ipfsReference'
+import resolveTokenRegisteredMetadata from '@/functions/resolvers/tokenRegisteredMetadata'
 import type { PopulatedToken } from '@/@types'
 
 export const config = {
@@ -49,27 +49,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
         let tokenNameDisplay = ''
 
         if (isFungible) {
-          let _decimals: number | null = null
-          let _ticker: string | null = null
+          const { decimals, ticker } = await resolveTokenRegisteredMetadata(tokenId, metadata)
 
-          if (metadata && metadata.decimals != null) _decimals = metadata.decimals
-          if (metadata && metadata.ticker != null) _ticker = metadata.ticker
-
-          if (_decimals == null || _ticker == null) {
-            try {
-              const cardanoTokenRegistry = new CardanoTokenRegistry()
-              const { ticker, decimals } = await cardanoTokenRegistry.getTokenInformation(tokenId)
-
-              _decimals = decimals
-              _ticker = ticker
-            } catch (error) {
-              _decimals = 0
-              _ticker = ''
-            }
-          }
-
-          tokenAmountDecimals = _decimals
-          tokenNameTicker = _ticker
+          tokenAmountDecimals = decimals
+          tokenNameTicker = ticker
         }
 
         const thumb = onchain_metadata?.image

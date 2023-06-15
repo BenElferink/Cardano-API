@@ -13,7 +13,11 @@ interface FetchedExternal {
   [lowercasedTraitCategory: string]: any // eyewear: '(U) 3D Glasses'
 }
 
-export interface RankedAsset {
+export interface PolicyRanked {
+  [tokentName: string]: string
+}
+
+export interface RankedToken {
   assetId: string
   rank: number
   attributes: {
@@ -25,15 +29,41 @@ class CnftTools {
   baseUrl: string
 
   constructor() {
-    this.baseUrl = 'https://api.cnft.tools'
+    this.baseUrl = 'https://api.cnft.tools/api'
   }
 
-  getRankedAssets = (policyId: string): Promise<RankedAsset[] | null> => {
-    const uri = `${this.baseUrl}/api/external/${policyId}`
+  getPolicyRanks = (policyId: string): Promise<PolicyRanked | null> => {
+    const uri = `${this.baseUrl}/rankings/${policyId}`
 
     return new Promise(async (resolve, reject) => {
       try {
-        console.log('Fetching ranked assets:', policyId)
+        console.log('Fetching policy ranks:', policyId)
+
+        const { data } = await axios.get<PolicyRanked>(uri, {
+          headers: {
+            'Accept-Encoding': 'application/json',
+          },
+        })
+
+        console.log('Fetched policy ranks')
+
+        return resolve(data)
+      } catch (error: any) {
+        if (error?.response?.data?.error === 'Policy ID not found') {
+          return resolve(null)
+        }
+
+        return reject(error)
+      }
+    })
+  }
+
+  getTokens = (policyId: string): Promise<RankedToken[] | null> => {
+    const uri = `${this.baseUrl}/external/${policyId}`
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log('Fetching tokens from cnft.tools:', policyId)
 
         const { data } = await axios.get<FetchedExternal[]>(uri, {
           headers: {
@@ -41,7 +71,7 @@ class CnftTools {
           },
         })
 
-        console.log('Fetched ranked assets:', data.length)
+        console.log('Fetched tokens from cnft.tools:', data.length)
 
         const excludeKeysFromAttributes = [
           'assetID',
@@ -84,4 +114,6 @@ class CnftTools {
   }
 }
 
-export default CnftTools
+const cnftTools = new CnftTools()
+
+export default cnftTools

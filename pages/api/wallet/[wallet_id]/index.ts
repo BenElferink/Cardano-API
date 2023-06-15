@@ -1,92 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import * as cardanoSerialization from '@emurgo/cardano-serialization-lib-nodejs'
 import blockfrost from '@/utils/blockfrost'
-import CardanoTokenRegistry from '@/utils/cardanoTokenRegistry'
-import { resolveAddressFromHandle } from '@/functions/resolvers/adaHandle'
 import { fromChainToDisplay } from '@/functions/formatters/tokenAmount'
+import resolveTokenRegisteredMetadata from '@/functions/resolvers/tokenRegisteredMetadata'
+import resolveWalletIdentifiers from '@/functions/resolvers/walletIdentifiers'
+import { INVALID_WALLET_IDENTIFIER } from '@/constants'
 import type { Token, Wallet } from '@/@types'
 
 export const config = {
   api: {
     responseLimit: false,
   },
-}
-
-const INVALID_WALLET_IDENTIFIER = 'INVALID_WALLET_IDENTIFIER'
-
-const getWalletStakeKeyAndAddressesFromCborString = async (
-  walletIdentifier: string
-): Promise<{
-  stakeKey: string
-  addresses: string[]
-} | null> => {
-  let stringFromCbor = ''
-
-  try {
-    stringFromCbor = cardanoSerialization.Address.from_bytes(
-      walletIdentifier.length % 2 === 0 && /^[0-9A-F]*$/i.test(walletIdentifier)
-        ? Buffer.from(walletIdentifier, 'hex')
-        : Buffer.from(walletIdentifier, 'utf-8')
-    ).to_bech32()
-  } catch (error) {
-    return null
-  }
-
-  let stakeKey = stringFromCbor.indexOf('stake1') === 0 ? stringFromCbor : ''
-  let walletAddress = stringFromCbor.indexOf('addr1') === 0 ? stringFromCbor : ''
-
-  if (!stakeKey && !walletAddress) {
-    return null
-  }
-
-  if (!stakeKey) {
-    const data = await blockfrost.addresses(walletAddress)
-    stakeKey = data?.stake_address || ''
-  }
-
-  const addresses = (await blockfrost.accountsAddressesAll(stakeKey)).map((obj) => obj.address)
-
-  return {
-    stakeKey,
-    addresses,
-  }
-}
-
-const getWalletStakeKeyAndAddresses = async (
-  walletIdentifier: string
-): Promise<{
-  stakeKey: string
-  addresses: string[]
-}> => {
-  let stakeKey = walletIdentifier.indexOf('stake1') === 0 ? walletIdentifier : ''
-  let walletAddress = walletIdentifier.indexOf('addr1') === 0 ? walletIdentifier : ''
-  const adaHandle = walletIdentifier.indexOf('$') === 0 ? walletIdentifier : ''
-
-  if (!stakeKey && !walletAddress && !adaHandle) {
-    const result = await getWalletStakeKeyAndAddressesFromCborString(walletIdentifier)
-
-    if (!result) {
-      throw new Error(INVALID_WALLET_IDENTIFIER)
-    }
-
-    return result
-  }
-
-  if (!stakeKey) {
-    if (!walletAddress) {
-      walletAddress = await resolveAddressFromHandle(adaHandle)
-    }
-
-    const data = await blockfrost.addresses(walletAddress)
-    stakeKey = data?.stake_address || ''
-  }
-
-  const addresses = (await blockfrost.accountsAddressesAll(stakeKey)).map((obj) => obj.address)
-
-  return {
-    stakeKey,
-    addresses,
-  }
 }
 
 export interface WalletResponse extends Wallet {}
@@ -105,7 +28,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
       case 'GET': {
         console.log('Fetching wallet:', walletId)
 
-        const { stakeKey, addresses } = await getWalletStakeKeyAndAddresses(walletId)
+        const { stakeKey, addresses } = await resolveWalletIdentifiers(walletId)
 
         console.log('Fetched wallet:', stakeKey)
 
@@ -162,22 +85,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<WalletResponse>
             let tokenNameTicker = ''
 
             if (isFungible) {
-              try {
-                const cardanoTokenRegistry = new CardanoTokenRegistry()
-                const { decimals, ticker } = await cardanoTokenRegistry.getTokenInformation(tokenId)
+              const { decimals, ticker } = await resolveTokenRegisteredMetadata(tokenId)
 
-                tokenAmountDecimals = decimals
-                tokenNameTicker = ticker
-              } catch (error) {
-                console.log('Fetching token:', tokenId)
-
-                const { fingerprint, metadata } = await blockfrost.assetsById(tokenId)
-
-                console.log('Fetched token:', fingerprint)
-
-                tokenAmountDecimals = metadata?.decimals || 0
-                tokenNameTicker = metadata?.ticker || ''
-              }
+              tokenAmountDecimals = decimals
+              tokenNameTicker = ticker
             }
 
             const token: Token = {

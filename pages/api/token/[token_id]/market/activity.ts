@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import JpgStore from '@/utils/jpgStore'
+import jpgStore from '@/utils/jpgStore'
 import type { MarketToken } from '@/@types'
-
-const jpgStore = new JpgStore()
 
 export interface TokenMarketActivityResponse {
   tokenId: string

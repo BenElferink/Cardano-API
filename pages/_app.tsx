@@ -7,7 +7,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Fragment>
       <Head>
-        <meta name='description' content='A web API designed to make reading data on Cardano an easy task!' />
+        <meta name='description' content='A web API for reading data on Cardano' />
 
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
         <meta name='author' content='Ben Elferink' />
@@ -20,7 +20,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel='apple-touch-icon' sizes='180x180' href='/apple-touch-icon.png' />
         <link rel='manifest' href='/manifest.json' />
 
-        <title>Bad API | Data Tool</title>
+        <title>Cardano API</title>
       </Head>
 
       <Component {...pageProps} />

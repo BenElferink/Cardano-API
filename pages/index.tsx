@@ -1,5 +1,4 @@
 import type { NextPage } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 
 const Page: NextPage = () => {
@@ -15,7 +14,7 @@ const Page: NextPage = () => {
       }}
     >
       <Link href='https://badfoxmc.com' target='_blank' rel='noopener noreferrer'>
-        Bad API 🛜
+        Cardano API 🛜 - by Bad Fox Motorcycle Club
       </Link>
     </main>
   )

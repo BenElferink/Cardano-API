@@ -1,15 +1,15 @@
 {
-  "name": "cardano-bad-api",
+  "name": "cardano-api",
   "version": "0.1.0",
   "private": true,
   "homepage": "https://api.badfoxmc.com",
   "author": "Ben Elferink <ben.elferink@icloud.com> (https://www.linkedin.com/in/ben-elferink-37ba251b9)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/belferink1996/cardano-bad-api.git"
+    "url": "https://github.com/belferink1996/cardano-api.git"
   },
   "bugs": {
-    "url": "https://github.com/belferink1996/cardano-bad-api/issues",
+    "url": "https://github.com/belferink1996/cardano-api/issues",
     "email": "ben.elferink@icloud.com"
   },
   "scripts": {
@@ -19,19 +19,19 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@blockfrost/blockfrost-js": "^5.2.0",
-    "@meshsdk/core": "^1.5.2",
+    "@blockfrost/blockfrost-js": "^5.3.1",
+    "@meshsdk/core": "^1.5.4",
     "@meshsdk/react": "^1.1.7",
-    "next": "13.3.0",
+    "next": "13.4.7",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
-    "@types/node": "18.15.11",
-    "@types/react": "18.0.35",
-    "@types/react-dom": "18.0.11",
-    "eslint": "8.38.0",
-    "eslint-config-next": "13.3.0",
-    "typescript": "5.0.4"
+    "@types/node": "20.3.2",
+    "@types/react": "18.2.14",
+    "@types/react-dom": "18.2.6",
+    "eslint": "8.43.0",
+    "eslint-config-next": "13.4.7",
+    "typescript": "5.1.5"
   }
 }

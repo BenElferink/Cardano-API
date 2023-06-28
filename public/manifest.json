@@ -1,7 +1,7 @@
 {
-  "short_name": "Bad API",
-  "name": "Bad API - Bad Fox Motorcycle Club",
-  "description": "A web API designed to make reading data on Cardano an easy task!",
+  "short_name": "Cardano API",
+  "name": "Cardano API",
+  "description": "A web API for reading data on Cardano",
   "icons": [
     {
       "src": "favicon.ico",

@@ -41,6 +41,7 @@ export interface RankedToken extends Token {
 
 export interface PopulatedToken extends RankedToken {
   fingerprint: string
+  mintTx: string
   policyId: PolicyId
   serialNumber?: number
   image: {
@@ -95,5 +96,6 @@ export interface Utxo {
 export interface Transaction {
   transactionId: TransactionId
   block: string
+  blockHeight: number
   utxos?: Utxo[]
 }

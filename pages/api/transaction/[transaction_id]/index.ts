@@ -26,13 +26,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TransactionResp
         console.log('Fetching TX:', transactionId)
 
         const tx = await blockfrost.txs(transactionId)
-        const block = tx.block
 
-        console.log('Fetched TX:', block)
+        console.log('Fetched TX')
 
         const payload: Transaction = {
           transactionId,
-          block,
+          block: tx.block,
+          blockHeight: tx.block_height,
         }
 
         if (withUtxos) {

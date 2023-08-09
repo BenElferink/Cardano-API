@@ -36,6 +36,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           onchain_metadata_standard,
           onchain_metadata,
           metadata,
+          initial_mint_tx_hash,
         } = await blockfrost.assetsById(tokenId)
 
         console.log('Fetched token:', fingerprint)
@@ -110,6 +111,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           policyId,
           tokenId,
           fingerprint,
+          mintTx: initial_mint_tx_hash,
           isFungible,
           serialNumber: Number(tokenNameOnChain.match(/\d+/g)?.join('')) || 0,
           tokenAmount: {

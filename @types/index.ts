@@ -41,9 +41,10 @@ export interface RankedToken extends Token {
 
 export interface PopulatedToken extends RankedToken {
   fingerprint: string
-  mintTx: string
   policyId: PolicyId
   serialNumber?: number
+  mintTransactionId: string
+  mintBlockHeight?: number
   image: {
     ipfs: string
     url: string

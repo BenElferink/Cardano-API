@@ -18,6 +18,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
   const { method, query } = req
 
   const tokenId = query.token_id?.toString()
+  const populateMintTx = !!query.populate_mint_tx && query.populate_mint_tx == 'true'
 
   if (!tokenId) {
     return res.status(400).end()
@@ -108,12 +109,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
         }
 
         const payload: PopulatedToken = {
-          policyId,
           tokenId,
           fingerprint,
-          mintTx: initial_mint_tx_hash,
           isFungible,
-          serialNumber: Number(tokenNameOnChain.match(/\d+/g)?.join('')) || 0,
+          policyId,
+          serialNumber: Number(tokenNameOnChain.match(/\d+/g)?.join('')) || undefined,
+          mintTransactionId: initial_mint_tx_hash,
+          mintBlockHeight: undefined,
           tokenAmount: {
             onChain: Number(quantity),
             decimals: tokenAmountDecimals,
@@ -127,6 +129,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
           image,
           files,
           attributes,
+        }
+
+        if (populateMintTx) {
+          console.log('Fetching TX:', payload.mintTransactionId)
+
+          const tx = await blockfrost.txs(payload.mintTransactionId)
+
+          console.log('Fetched TX')
+
+          payload.mintBlockHeight = tx.block_height
+        } else {
+          payload.mintBlockHeight = undefined
+          delete payload.mintBlockHeight
         }
 
         if (!payload.serialNumber) {
@@ -145,11 +160,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
   } catch (error: any) {
     console.error(error)
 
-    if (
-      ['The requested component has not been found.', 'Invalid or malformed asset format.'].includes(
-        error?.message
-      )
-    ) {
+    if (['The requested component has not been found.', 'Invalid or malformed asset format.'].includes(error?.message)) {
       return res.status(404).end(`Token not found: ${tokenId}`)
     }
 

@@ -47,8 +47,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
 
         const isFungible = tokenAmountOnChain > 1
         const tokenNameOnChain = fromHexToString(asset_name || tokenId.replace(policyId, ''))
+        const tokenNameDisplay = onchain_metadata?.name?.toString() || metadata?.name?.toString() || ''
         let tokenNameTicker = ''
-        let tokenNameDisplay = ''
 
         if (isFungible) {
           const { decimals, ticker } = await resolveTokenRegisteredMetadata(tokenId, metadata)
@@ -75,38 +75,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TokenResponse>)
 
         const files = (onchain_metadata?.files as PopulatedToken['files']) || []
 
+        const meta = onchain_metadata?.attributes || onchain_metadata || metadata || {}
         const attributes: PopulatedToken['attributes'] = {}
-        if (onchain_metadata) {
-          tokenNameDisplay = onchain_metadata?.name?.toString() || ''
 
-          let meta = {}
-          if (onchain_metadata?.attributes) {
-            meta = onchain_metadata.attributes
-          } else {
-            meta = onchain_metadata
-          }
+        const ignoreKeys = ['project', 'collection', 'name', 'description', 'logo', 'image', 'mediaType', 'files', 'decimals', 'ticker', 'url']
 
-          const ignoreKeys = ['name', 'project', 'collection', 'description', 'image', 'mediaType', 'files']
-          Object.entries(meta).forEach(([key, val]) => {
-            if (!ignoreKeys.includes(key)) {
-              // @ts-ignore
-              if (onchain_metadata_standard === 'CIP68v1') {
-                attributes[key] = fromHexToString(val as string).slice(1)
-              } else {
-                attributes[key] = val as string
-              }
+        Object.entries(meta).forEach(([key, val]) => {
+          if (!ignoreKeys.includes(key)) {
+            if (onchain_metadata_standard === 'CIP68v1') {
+              attributes[key] = fromHexToString(val?.toString() || 'X').slice(1)
+            } else {
+              attributes[key] = val?.toString()
             }
-          })
-        } else if (metadata) {
-          tokenNameDisplay = metadata?.name || ''
-
-          // const ignoreKeys = ['name', 'ticker', 'description', 'logo', 'url', 'decimals']
-          // Object.entries(metadata).forEach(([key, val]) => {
-          //   if (!ignoreKeys.includes(key)) {
-          //     attributes[key] = val as string
-          //   }
-          // })
-        }
+          }
+        })
 
         const payload: PopulatedToken = {
           tokenId,

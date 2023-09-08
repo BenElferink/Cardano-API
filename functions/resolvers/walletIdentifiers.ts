@@ -33,7 +33,7 @@ const resolveWalletIdentifiersFromCborString = async (
     stakeKey = data?.stake_address || ''
   }
 
-  const addresses = (await blockfrost.accountsAddressesAll(stakeKey)).map((obj) => obj.address)
+  const addresses = stakeKey ? (await blockfrost.accountsAddressesAll(stakeKey)).map((obj) => obj.address) : [walletAddress]
 
   return {
     stakeKey,
@@ -70,7 +70,7 @@ const resolveWalletIdentifiers = async (
     stakeKey = data?.stake_address || ''
   }
 
-  const addresses = (await blockfrost.accountsAddressesAll(stakeKey)).map((obj) => obj.address)
+  const addresses = stakeKey ? (await blockfrost.accountsAddressesAll(stakeKey)).map((obj) => obj.address) : [walletAddress]
 
   return {
     stakeKey,
